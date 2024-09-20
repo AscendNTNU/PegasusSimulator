@@ -1,0 +1,8 @@
+{
+  "executionEnvironments": [
+    {
+      "root": "./",
+      "pythonPath": "/home/ascend/.local/share/ov/pkg/isaac-sim-4.1.0/kit/python/python3"
+    }
+  ]
+}

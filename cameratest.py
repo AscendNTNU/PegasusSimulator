@@ -1,4 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+
+
+WORLD_FILE = "/home/ascend/Documents/warehouse_depth_world.usd"
+
+
+
 """
 | File: 8_camera_vehicle.py
 | License: BSD-3-Clause. Copyright (c) 2024, Marcelo Jacinto. All rights reserved.
@@ -14,7 +20,7 @@ from isaacsim import SimulationApp
 # Start Isaac Sim's simulation environment
 # Note: this simulation app must be instantiated right after the SimulationApp import, otherwise the simulator will crash
 # as this is the object that will load all the extensions and load the actual simulator.
-simulation_app = SimulationApp({"headless": False})
+simulation_app = SimulationApp({"headless": True})
 
 # -----------------------------------
 # The actual script should start here
@@ -25,7 +31,6 @@ from omni.isaac.core.world import World
 # Import the Pegasus API for simulating drones
 from pegasus.simulator.params import ROBOTS, SIMULATION_ENVIRONMENTS
 from pegasus.simulator.logic.graphical_sensors.monocular_camera import MonocularCamera
-from pegasus.simulator.logic.graphical_sensors.lidar import Lidar
 from pegasus.simulator.logic.backends.mavlink_backend import MavlinkBackend, MavlinkBackendConfig
 from pegasus.simulator.logic.backends.ros2_backend import ROS2Backend
 from pegasus.simulator.logic.vehicles.multirotor import Multirotor, MultirotorConfig
@@ -57,20 +62,9 @@ class PegasusApp:
 
         # Launch one of the worlds provided by NVIDIA
         #self.pg.load_environment(SIMULATION_ENVIRONMENTS["Curved Gridroom"])
-        self.pg.load_environment("/home/ascend/autonomous_flight_world.usd")
+        self.pg.load_environment(WORLD_FILE)
 
         from omni.isaac.core.objects import DynamicCuboid
-        import numpy as np
-        cube_2 = self.world.scene.add(
-            DynamicCuboid(
-                prim_path="/new_cube_2",
-                name="cube_1",
-                position=np.array([-3.0, 0, 2.0]),
-                scale=np.array([1.0, 1.0, 1.0]),
-                size=1.0,
-                color=np.array([255, 0, 0]),
-            )
-        )
 
         # Create the vehicle
         # Try to spawn the selected robot in the world to the specified namespace
@@ -92,14 +86,29 @@ class PegasusApp:
                             "sub_control": False,})]
 
         # Create a camera and lidar sensors
-        config_multirotor.graphical_sensors = [MonocularCamera("camera", config={"frequency": 5.0})] # Lidar("lidar")
+        import numpy as np
+        camera_config = {
+            "depth": False,
+            #"position": np.array([0.30, 0.0, 0.0]),
+            #"orientation": np.array([0.0, 0.0, 0.0]),
+            #"resolution": (1920, 1200),
+            #"frequency": 30,
+            #"intrinsics": np.array([[5, 0.0, 957.8], [0.0, 5, 589.5], [0.0, 0.0, 1.0]]), # DOESN'T DO ANYTHING
+            #"intrinsics": np.array([[958.8, 0.0, 957.8], [0.0, 956.7, 589.5], [0.0, 0.0, 1.0]]),
+            #"distortion_coefficients": np.array([0.14, -0.03, -0.0002, -0.00003, 0.009, 0.5, -0.07, 0.017]),
+            #"diagonal_fov": 140.0
+        }
+
+        self.camera = MonocularCamera("camera", config=camera_config)
+        config_multirotor.graphical_sensors = [self.camera] # Lidar("lidar")
+
         
         Multirotor(
             "/World/quadrotor",
             ROBOTS['Iris'],
             0,
-            [1.0, 0.0, 0.07],
-            Rotation.from_euler("XYZ", [0.0, 0.0, 0.0], degrees=True).as_quat(),
+            [0.0, 0.0, 0.07],
+            Rotation.from_euler("XYZ", [0.0, 0.0, 90.0], degrees=True).as_quat(),
             config=config_multirotor,
         )
 
@@ -113,6 +122,8 @@ class PegasusApp:
         """
         Method that implements the application main loop, where the physics steps are executed.
         """
+
+        self.camera._camera.set_focal_length(12.5 / 10)
 
         # Start the simulation
         self.timeline.play()

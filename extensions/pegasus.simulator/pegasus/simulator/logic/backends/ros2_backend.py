@@ -86,6 +86,8 @@ class ROS2Backend(Backend):
         # Check if the tf2_ros library is loaded and if the flag is set to True
         self._pub_tf = config.get("pub_tf", False) and tf2_ros_loaded
 
+
+        self.timeline = omni.timeline.get_timeline_interface()
         # Start the actual ROS2 setup here
         try:
             rclpy.init()
@@ -172,7 +174,9 @@ class ROS2Backend(Backend):
 
         # Create the transformation from base_link FLU (ROS standard) to base_link FRD (standard in airborn and marine vehicles)
         t = TransformStamped()
-        t.header.stamp = self.node.get_clock().now().to_msg()
+        sec, nanosec = self.get_sim_time()
+        t.header.stamp.sec = sec
+        t.header.stamp.nanosec = nanosec
         t.header.frame_id = self._namespace + '_' + 'base_link'
         t.child_frame_id = self._namespace + '_' + 'base_link_frd'
 
@@ -189,7 +193,9 @@ class ROS2Backend(Backend):
 
         # Create the transform from map, i.e inertial frame (ROS standard) to map_ned (standard in airborn or marine vehicles)
         t = TransformStamped()
-        t.header.stamp = self.node.get_clock().now().to_msg()
+        sec, nanosec = self.get_sim_time()
+        t.header.stamp.sec = sec
+        t.header.stamp.nanosec = nanosec
         t.header.frame_id = "map"
         t.child_frame_id = "map_ned"
         
@@ -219,7 +225,10 @@ class ROS2Backend(Backend):
         accel = AccelStamped()
 
         # Update the header
-        pose.header.stamp = self.node.get_clock().now().to_msg()
+        sec, nanosec = self.get_sim_time()
+        pose.header.stamp.sec = sec 
+        pose.header.stamp.nanosec = nanosec
+
         twist.header.stamp = pose.header.stamp
         twist_inertial.header.stamp = pose.header.stamp
         accel.header.stamp = pose.header.stamp
@@ -323,7 +332,10 @@ class ROS2Backend(Backend):
         msg = Imu()
 
         # Update the header
-        msg.header.stamp = self.node.get_clock().now().to_msg()
+        # Use simulation time
+        sec, nanosec = self.get_sim_time()
+        msg.header.stamp.sec = sec
+        msg.header.stamp.nanosec = nanosec 
         msg.header.frame_id = self._namespace + '_' + "base_link_frd"
         
         # Update the angular velocity (NED + FRD)
@@ -345,7 +357,9 @@ class ROS2Backend(Backend):
         msg_vel = TwistStamped()
 
         # Update the headers
-        msg.header.stamp = self.node.get_clock().now().to_msg()
+        sec, nanosec = self.get_sim_time()
+        msg.header.stamp.sec = sec
+        msg.header.stamp.nanosec = nanosec
         msg.header.frame_id = "map_ned"
         msg_vel.header.stamp = msg.header.stamp
         msg_vel.header.frame_id = msg.header.frame_id
@@ -375,7 +389,9 @@ class ROS2Backend(Backend):
         msg = MagneticField()
 
         # Update the headers
-        msg.header.stamp = self.node.get_clock().now().to_msg()
+        sec, nanosec = self.get_sim_time()
+        msg.header.stamp.sec = sec
+        msg.header.stamp.nanosec = nanosec
         msg.header.frame_id = "base_link_frd"
 
         msg.magnetic_field.x = data["magnetic_field"][0]
@@ -509,3 +525,12 @@ class ROS2Backend(Backend):
         """
         # Reset the reference for the thrusters
         self.input_ref = [0.0 for i in range(self._num_rotors)]
+
+    def get_sim_time(self):
+        """
+        Method that returns the simulation time in the form (sec, nanosec)
+        """
+        time = self.timeline.get_current_time()
+        sec = int(time)
+        nanosec = int((time - int(time)) * 10**9)
+        return (sec, nanosec)

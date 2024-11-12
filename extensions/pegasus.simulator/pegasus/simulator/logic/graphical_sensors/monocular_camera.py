@@ -166,3 +166,11 @@ class MonocularCamera(GraphicalSensor):
             self._state = None
 
         return self._state
+
+    def get_pointcloud(self):
+        """
+        Wrapper around omni function.
+        Requires depth=True in config (i think)
+        """
+        assert self._depth, "Use depth=True in camera config to get a pointcloud."
+        return self._camera.get_pointcloud()

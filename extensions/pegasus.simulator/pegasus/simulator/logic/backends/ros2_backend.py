@@ -431,6 +431,13 @@ class ROS2Backend(Backend):
             # Add the writer to the dictionary
             self.graphical_sensors_writers[data["camera_name"]].append(writer_depth)
 
+
+            writer_pcl = rep.writers.get("DistanceToImagePlaneSDROS2PublishPointCloud")
+            writer_pcl.initialize(nodeNamespace=self._namespace + str(self._id), topicName=data["camera_name"] + "/pointcloud", frameId=data["camera_name"], queueSize=1)
+            writer_pcl.attach([render_prod_path])
+
+            self.graphical_sensors_writers[data["camera_name"]].append(writer_pcl)
+
         # Create a writer for publishing the camera info
         writer_info = rep.writers.get("ROS2PublishCameraInfo")
         camera_info = read_camera_info(render_product_path=render_prod_path)

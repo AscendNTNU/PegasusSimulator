@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 
-WORLD_FILE = "/home/ascend/Documents/autonomous_flight_world.usd"
+WORLD_FILE = "/home/ascend/Documents/autonomous_flight_world_clock.usd"
 
 
 

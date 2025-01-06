@@ -96,6 +96,7 @@ class ROS2Backend(Backend):
             pass
 
         self.node = rclpy.create_node("simulator_vehicle_" + str(vehicle_id))
+        self.node.set_parameters([rclpy.Parameter("use_sim_time", rclpy.Parameter.Type.BOOL, True)])
 
         # Initialize the publishers and subscribers
         self.initialize_publishers(config)
@@ -177,6 +178,7 @@ class ROS2Backend(Backend):
         sec, nanosec = self.get_sim_time()
         t.header.stamp.sec = sec
         t.header.stamp.nanosec = nanosec
+        t.header.stamp = self.node.get_clock().now().to_msg()
         t.header.frame_id = self._namespace + '_' + 'base_link'
         t.child_frame_id = self._namespace + '_' + 'base_link_frd'
 
@@ -196,6 +198,7 @@ class ROS2Backend(Backend):
         sec, nanosec = self.get_sim_time()
         t.header.stamp.sec = sec
         t.header.stamp.nanosec = nanosec
+        t.header.stamp = self.node.get_clock().now().to_msg()
         t.header.frame_id = "map"
         t.child_frame_id = "map_ned"
         
@@ -228,6 +231,7 @@ class ROS2Backend(Backend):
         sec, nanosec = self.get_sim_time()
         pose.header.stamp.sec = sec 
         pose.header.stamp.nanosec = nanosec
+        pose.header.stamp = self.node.get_clock().now().to_msg()
 
         twist.header.stamp = pose.header.stamp
         twist_inertial.header.stamp = pose.header.stamp
@@ -336,6 +340,8 @@ class ROS2Backend(Backend):
         sec, nanosec = self.get_sim_time()
         msg.header.stamp.sec = sec
         msg.header.stamp.nanosec = nanosec 
+        msg.header.stamp = self.node.get_clock().now().to_msg()
+
         msg.header.frame_id = self._namespace + '_' + "base_link_frd"
         
         # Update the angular velocity (NED + FRD)
@@ -360,6 +366,7 @@ class ROS2Backend(Backend):
         sec, nanosec = self.get_sim_time()
         msg.header.stamp.sec = sec
         msg.header.stamp.nanosec = nanosec
+        msg.header.stamp = self.node.get_clock().now().to_msg()
         msg.header.frame_id = "map_ned"
         msg_vel.header.stamp = msg.header.stamp
         msg_vel.header.frame_id = msg.header.frame_id
@@ -392,6 +399,7 @@ class ROS2Backend(Backend):
         sec, nanosec = self.get_sim_time()
         msg.header.stamp.sec = sec
         msg.header.stamp.nanosec = nanosec
+        msg.header.stamp = self.node.get_clock().now().to_msg()
         msg.header.frame_id = "base_link_frd"
 
         msg.magnetic_field.x = data["magnetic_field"][0]

@@ -134,6 +134,7 @@ class MonocularCamera(GraphicalSensor):
             (dict) A dictionary containing the current state of the sensor (the data produced by the sensor)
         """
 
+        # What the hell is this
         while self.counter < 100:
             self.counter += 1
             return

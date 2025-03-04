@@ -117,6 +117,7 @@ class ROS2Backend(Backend):
 
             # Initiliaze the static tf broadcaster for the sensors
             self.tf_static_broadcaster = StaticTransformBroadcaster(self.node)
+            self.tf_static_base_link_broadcaster = StaticTransformBroadcaster(self.node)
 
             # Initialize the static tf broadcaster for the base_link transformation
             self.send_static_transforms()
@@ -191,7 +192,7 @@ class ROS2Backend(Backend):
         t.transform.rotation.z = 0.0
         t.transform.rotation.w = 0.0
 
-        self.tf_static_broadcaster.sendTransform(t)
+        self.tf_static_base_link_broadcaster.sendTransform(t)
 
         # Create the transform from map, i.e inertial frame (ROS standard) to map_ned (standard in airborn or marine vehicles)
         t = TransformStamped()
@@ -291,7 +292,6 @@ class ROS2Backend(Backend):
             t.transform.rotation.z = state.attitude[2]
             t.transform.rotation.w = state.attitude[3]
             self.tf_broadcaster.sendTransform(t)
-        
 
     def rotor_callback(self, ros_msg: Float64, rotor_id):
         # Update the reference for the rotor of the vehicle
